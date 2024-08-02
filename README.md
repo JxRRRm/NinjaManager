@@ -200,3 +200,4 @@ Meet the Team:
 # License
 
 All rights are observed. This project is not open source.
+# NinjaManager
