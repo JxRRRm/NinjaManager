@@ -6,7 +6,6 @@ const capitalizeFirstLetter = (string) => {
   return string.charAt(0).toUpperCase() + string.slice(1).toLowerCase();
 };
 
-// get all tasks
 // get all tasks with detailed createdBy and updatedBy information
 const getTasks = async (req, res) => {
   try {
@@ -202,6 +201,8 @@ const deleteTask = async (req, res) => {
 };
 
 // update a task
+
+
 // Inside your task update route handler
 const updateTask = async (req, res) => {
   const { id } = req.params;
@@ -258,6 +259,34 @@ exports.updateTaskStatuses = async () => {
     }
   });
 };
+//=========================================================================================================
+// Inside taskController.js
+const updateTaskStatus = async (req, res) => {
+  const { id } = req.params;
+  const { status } = req.body;
+
+  if (!mongoose.Types.ObjectId.isValid(id)) {
+    return res.status(404).json({ error: 'No such task' });
+  }
+
+  try {
+    const task = await Task.findByIdAndUpdate(
+      id, 
+      { status: status }, // Update only the status field
+      { new: true } // Return the updated document
+    ).populate('createdBy updatedBy', 'fname lname');
+
+    if (!task) {
+      return res.status(404).json({ error: 'No such task' });
+    }
+
+    res.status(200).json(task);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
 
 module.exports = {
   getTasks,
@@ -269,5 +298,7 @@ module.exports = {
   completeTask,
   markTaskDeleted,
   uncompleteTask,
-  undeletedTask
+  undeletedTask,
+  updateTaskStatus, // Add this here
 };
+

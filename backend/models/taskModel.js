@@ -1,5 +1,6 @@
 const mongoose = require('mongoose');
 const Schema = mongoose.Schema;
+const Counter = require('./counterModel'); // Adjust the path as needed
 
 const taskSchema = new Schema({
   title: {
@@ -8,16 +9,16 @@ const taskSchema = new Schema({
   },
   date: { 
     type: Date,
-    required: true
+    required: false
   },
   description: {
     type: String,
-    required: true
+    required: false
   },
   priority: {
     type: String,
-    enum: ['High', 'Medium', 'Low'],
-    required: true
+    enum: ['HIGH', 'MEDIUM', 'LOW'],
+    required: false
   },
   completed: {
     type: Boolean,
@@ -29,11 +30,8 @@ const taskSchema = new Schema({
   },
   status: {
     type: String,
-    enum: ['In Progress', 'Past Due'],
-    default: function() {
-      const now = new Date();
-      return now > this.date ? 'Past Due' : 'In Progress';
-    }
+    enum: ['TODO', 'IN PROGRESS', 'DONE'],
+    default: 'TODO',
   },  
   createdBy: {
     type: mongoose.Schema.Types.ObjectId,
@@ -52,7 +50,31 @@ const taskSchema = new Schema({
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User',
     required: false
-  }]
-}, { timestamps: true });
+  }],
+  id: {
+    type: String, // Change to String to accommodate zero-padded IDs
+    unique: true // Ensure uniqueness
+  }
+}, { 
+  timestamps: true,
+});
+
+// Pre-save hook to generate an auto-incrementing ID
+taskSchema.pre('save', async function(next) {
+  if (this.isNew) {
+    try {
+      const counter = await Counter.findByIdAndUpdate(
+        { _id: 'task_id' }, // This identifies the counter for tasks
+        { $inc: { sequence_value: 1 } }, // Increment the sequence value by 1
+        { new: true, upsert: true } // Create the counter if it doesn't exist
+      );
+       // Pad the ID with leading zeros to ensure it has three digits
+       this.id = counter.sequence_value.toString().padStart(3, '0');
+      } catch (error) {
+        return next(error);
+      }
+    }
+    next();
+  });
 
 module.exports = mongoose.model('Task', taskSchema);

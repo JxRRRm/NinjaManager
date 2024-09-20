@@ -1,44 +1,55 @@
 /* Home.css */
 
-.home .page-title {
+.top-container .page-title {
   text-align: left;
-  /* Add any additional styles you need for .page-title here */
+  width: fit-content;
+  height: fit-content;
+  padding: 0;
+  margin: 0;
 }
 
 .home {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
   margin: 0;
-  /* Add any additional styles you need for .home here */
+  background-color: #fff;
 }
 
-.home-container {
-  border: 1px solid #ccc; /* Add a border to the container */
+.top-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 100vw;
+  gap: 1rem;
+  border-bottom: 1px solid #e0e0e0; /* Add a border to the container #ccc*/
   padding: 20px; /* Add some padding inside the container */
-  margin-bottom: 20px; /* Add some margin at the bottom */
-  background: #b9b9b9; /* Optional: Add a background color */
+  margin-top: 0.5px;
 }
 
 .filters-bar {
   display: flex;
   align-items: center;
-  justify-content: flex-start;
-  padding: 0 50px;
-  gap: 10px; /* Reduced gap */
-  margin-bottom: 20px;
-  margin-right: 10px; 
+  width: fit-content;
+  gap: 1.25rem;
+  padding: 0.5rem 1rem;
+  margin: 0;
+  border-radius: 5px;
 }
 
 .filter-wrapper {
   display: flex;
   align-items: center;
-  margin-right: 10px; /* Space between label and input bar */
 }
 
 .filter-select,
 .filter-input {
-  padding: 10px;
-  border: 1px solid #ccc;
+  padding: 0.3rem;
+  background-color: #fff;
+  border: 1px solid #fff;
   border-radius: 5px;
-  width: 150px; /* Set a fixed width for the filter bars */
+  width: 8rem; /* Set a fixed width for the filter bars */
   margin-left: 10px; 
 }
 
@@ -49,11 +60,11 @@
 
 .home .clear-button button {
   background-color: #2087e7;
-  color: white;
+  color: #fff;
   border: none;
-  padding: 8px 15px;
+  padding: 0.4rem;
   border-radius: 5px;
-  font-size: 1em;
+  font-size: 0.75rem;
   cursor: pointer;
   height: auto;
   align-self: center;
@@ -62,16 +73,82 @@
   margin-left: 10px;
 }
 
-.tasks {
+.body-container {
+  display: flex;
+  flex-direction: row;
+  justify-content: flex-start;
+  width: 100vw;
+  padding: 0 0;
+  background-color: #fff;
+}
+
+.side-bar {
+  width: 12%;
+  height: 100vh;
+  background-color: #fff;
+  border-right: 1px solid #e0e0e0;
+  overflow-y: 
+  scroll;
+}
+
+.content-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 88%;
+  margin: 1rem 2rem;
+  background-color: #fff;
+  gap: 1rem;
+}
+
+.tool-bar {
+  flex-direction: row;
+  width: 100%;
+}
+
+.tasks-container {
+  display: flex;
+  flex-direction: column;
+  justify-content: left;
+  width: 100%;
+  background-color: #f2f2f2;
+  border-radius: 8px;
+}
+
+.tasks-container-header {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  width: auto;
+  height: fit-content;
+  margin: 1rem 1rem 0 1rem;
+  gap: 0.5%;
+  border-radius: 2px;
+  padding: 0rem 0.5rem;
+  box-shadow: 1px 1px  rgba(0,0,0,0.1);
+}
+.tasks-container-header > h4 {
+  margin: 0;
+  width: fit-content;
+  height: fit-content;
+}
+.tasks-wrapper{
   display: flex; /* Use flexbox for horizontal layout */
-  gap: 20px; /* Space between individual tasks */
-  overflow-x: auto !important; /* Enables horizontal scrolling */
-  padding-bottom: 20px; /* Optional: adds space below the tasks for the scrollbar */
+  flex-direction: column;
+  width: 98%;
+  height: fit-content;
+  margin: 1rem;
+  background-color: #f2f2f2;
+  border: 1px solid black;
+  border-radius: 3px;
+}
+.add-button {
+  margin: 0 1rem;
+  border: none;
+  text-align: left;
+  font: inherit;
+}
+.add-button:hover {
+  cursor: pointer;
 }
 
-.task {
-  flex: 0 0 250px; /* Adjust the starting width of the tasks */
-  /* Add any additional styles you need for .task here */
-}
-
-/* Additional styles can be added below as required */

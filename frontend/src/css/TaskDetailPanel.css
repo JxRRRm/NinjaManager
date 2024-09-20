@@ -1,0 +1,22 @@
+.task-detail-panel {
+  width: 30%;
+  height: 100vh;
+  background-color: #fff;
+  margin: 1rem 0;
+  border: 1px solid #e8e8e8;
+  border-radius: 8px;
+  overflow-y: auto;
+  z-index: 10;
+}
+
+.close-btn {
+  background-color: red;
+  color: white;
+  border: none;
+  padding: 5px 10px;
+  cursor: pointer;
+}
+
+.task-detail-panel > p {
+  margin: 0.25rem 0 0 0;
+}

@@ -3,7 +3,6 @@ import React, { useState, useEffect } from "react";
 import '../../css/Overview.css'; // Import CSS file
 import editIcon from '../../images/edit_icon.png';
 import { useTasksContext } from "../../hooks/useTasksContext"; 
-import TaskDetails from "../TaskDetails";
 import { useNavigate } from 'react-router-dom';
 import { useCustomFetch } from '../../hooks/useCustomFetch';
 import { useLogout } from '../../hooks/useLogout';

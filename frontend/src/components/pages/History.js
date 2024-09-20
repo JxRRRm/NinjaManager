@@ -66,9 +66,7 @@ const History = () => {
 
   return (
     <div className='History'>
-      <div className="page-title">
-        <h2>History</h2>
-      </div>
+      <h2>History</h2>
 
       <FiltersBar
         tasks={tasks}

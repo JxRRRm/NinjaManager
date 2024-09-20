@@ -9,7 +9,8 @@ const {
   completeTask,
   markTaskDeleted,
   uncompleteTask,
-  undeletedTask
+  undeletedTask,
+  updateTaskStatus // Import the new function
 } = require('../controllers/taskController')
 
 const requireAuth = require('../middleware/requireAuth')
@@ -28,7 +29,7 @@ router.get('/:id', getTask)
 router.post('/', createTask)
 
 // DELETE a task
-router.delete('/:id', deleteTask)
+router.delete('/tasks/:id', deleteTask)
 
 // UPDATE a task
 router.patch('/:id', updateTask)
@@ -46,6 +47,8 @@ router.patch('/mark-task-restore-deleted/:id', undeletedTask)
 // restore completed task
 router.patch('/mark-task-restore-completed/:id', uncompleteTask)
 
+// **NEW** Update the status of a task
+router.patch('/task/:id/status', updateTaskStatus); // New route to update task status
 
 
 module.exports = router

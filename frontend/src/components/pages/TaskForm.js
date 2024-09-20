@@ -26,10 +26,10 @@ const TaskForm = () => {
 
   useEffect(() => {
     const fetchEmployees = async () => {
-    if (!user) return;
+      if (!user) return;
 
-    try {
-                      // Update the fetch URL to include the correct port
+      try {
+        // Update the fetch URL to include the correct port
         const response = await fetch('http://localhost:4000/api/user/employees', {
           method: 'GET',
           headers: {
@@ -54,15 +54,15 @@ const TaskForm = () => {
   }, [user]);
 
   useEffect(() => {
-}, [selectedEmployees]); // This useEffect will run every time selectedEmployees changes
+  }, [selectedEmployees]); // This useEffect will run every time selectedEmployees changes
 
-   // Convert the local date and time to a UTC string
-   const convertToUTC = (localDateTime) => {
+  // Convert the local date and time to a UTC string
+  const convertToUTC = (localDateTime) => {
     // Directly return the localDateTime if it's empty, letting the backend handle the missing date validation
     if (!localDateTime) {
       return localDateTime;
     }
-  
+
     // Convert the local date and time to a UTC string for non-empty dates
     return moment(localDateTime, 'YYYY-MM-DDTHH:mm').tz('America/Los_Angeles').utc().format();
   };  
@@ -111,19 +111,19 @@ const TaskForm = () => {
   };          
 
 const handleTitleChange = (e) => {
-setTitle(e.target.value);
+  setTitle(e.target.value);
 };
 
 const handleDateChange = (e) => {
-setDate(e.target.value);
+  setDate(e.target.value);
 };
 
 const handlePriorityChange = (e) => {
-setPriority(e.target.value);
+  setPriority(e.target.value);
 };
 
 const handleDescriptionChange = (e) => {
-setDescription(e.target.value);
+  setDescription(e.target.value);
 };
 
 // Handler to add selected employee to the task
@@ -182,10 +182,10 @@ return (
           onChange={handlePriorityChange}
           value={priority}
       >
-          <option value="">Select Priority</option>
-          <option value="High">High</option>
-          <option value="Medium">Medium</option>
-          <option value="Low">Low</option>
+          <option value="-">Select Priority</option>
+          <option value="HIGH">High</option>
+          <option value="MEDIUM">Medium</option>
+          <option value="LOW">Low</option>
       </select>
 
       <label>Assign Employee:</label>
