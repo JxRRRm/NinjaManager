@@ -18,6 +18,7 @@ const taskSchema = new Schema({
   priority: {
     type: String,
     enum: ['HIGH', 'MEDIUM', 'LOW'],
+    default: 'LOW',
     required: false
   },
   completed: {
@@ -32,6 +33,7 @@ const taskSchema = new Schema({
     type: String,
     enum: ['TODO', 'IN PROGRESS', 'DONE'],
     default: 'TODO',
+    required: false
   },  
   createdBy: {
     type: mongoose.Schema.Types.ObjectId,

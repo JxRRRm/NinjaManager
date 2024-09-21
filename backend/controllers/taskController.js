@@ -1,304 +1,200 @@
+// controllers/taskController.js
 const Task = require('../models/taskModel');
 const mongoose = require('mongoose');
 
-// Helper function to capitalize the first letter of a string
-const capitalizeFirstLetter = (string) => {
-  return string.charAt(0).toUpperCase() + string.slice(1).toLowerCase();
-};
+// Utility function to check if ObjectId is valid
+const isValidObjectId = (id) => mongoose.Types.ObjectId.isValid(id);
 
-// get all tasks with detailed createdBy and updatedBy information
+// Fetch all tasks
 const getTasks = async (req, res) => {
   try {
-    const tasks = await Task.find({})
-                            .sort({ createdAt: -1 })
-                            .populate('createdBy', 'fname lname email')
-                            .populate('updatedBy', 'fname lname email');
-    const tasksWithCheck = tasks.map(task => {
-      task = task.toObject(); // Convert document to object for modification
-      // Check and handle deleted createdBy user
-      if (!task.createdBy) {
-        task.createdBy = { fname: "Deleted", lname: "User" }; // Placeholder for deleted createdBy user
-      }
-      // Check and handle deleted updatedBy user
-      if (!task.updatedBy) {
-        task.updatedBy = { fname: "Deleted", lname: "User" }; // Placeholder for deleted updatedBy user
-      }
-      return task;
-    });
-    res.status(200).json(tasksWithCheck);
+    const tasks = await Task.find().populate('createdBy updatedBy employees'); // Populating references
+    res.status(200).json(tasks);
   } catch (error) {
-    console.error(error);
-    res.status(500).json({ error: 'Internal server error' });
+    res.status(500).json({ message: 'Error fetching tasks', error });
   }
 };
 
-
-
-
-// get a single task
-const getTask = async (req, res) => {
+// Fetch a single task by ID
+const getTaskById = async (req, res) => {
   const { id } = req.params;
-
-  if (!mongoose.Types.ObjectId.isValid(id)) {
-    return res.status(404).json({ error: 'No such task' });
-  }
-
-  const task = await Task.findById(id);
-
-  if (!task) {
-    return res.status(404).json({ error: 'No such task' });
-  }
-
-  res.status(200).json(task);
-};
-
-const getCompletedTasks = async (req, res) => {
-  try {
-    const completedTasks = await Task.find({ completed: true }).sort({ createdAt: -1 });
-    res.status(200).json(completedTasks);
-  } catch (error) {
-    res.status(500).json({ error: 'Internal server error' });
-  }
-};
-
-//mark a task complete
-const completeTask = async (req, res) => {
-  const { id } = req.params;
-  if (!mongoose.Types.ObjectId.isValid(id)) {
-    return res.status(404).json({ error: 'No such task' });
-  }
-
-  const task = await Task.findById(id);
-
-  if (!task) {
-    return res.status(404).json({ error: 'No such task' });
-  }
-  task.completed = true;
-
-  res.status(200).json(task);
-  task.save()
-};
-
-//mark a task uncompleted
-const uncompleteTask = async (req, res) => {
-  const { id } = req.params;
-  if (!mongoose.Types.ObjectId.isValid(id)) {
-    return res.status(404).json({ error: 'No such task' });
-  }
-
-  const task = await Task.findById(id);
-
-  if (!task) {
-    return res.status(404).json({ error: 'No such task' });
-  }
-  task.completed = false;
-
-  res.status(200).json(task);
-  task.save()
-};
-
-//mark a task complete
-const undeletedTask = async (req, res) => {
-  const { id } = req.params;
-  if (!mongoose.Types.ObjectId.isValid(id)) {
-    return res.status(404).json({ error: 'No such task' });
-  }
-
-  const task = await Task.findById(id);
-
-  if (!task) {
-    return res.status(404).json({ error: 'No such task' });
-  }
-  task.deleted = false;
-
-  res.status(200).json(task);
-  task.save()
-};
-
-//mark a task deleted
-const markTaskDeleted = async (req, res) => {
-  const { id } = req.params;
-  if (!mongoose.Types.ObjectId.isValid(id)) {
-    return res.status(404).json({ error: 'No such task' });
-  }
-
-  const task = await Task.findById(id);
-
-  if (!task) {
-    return res.status(404).json({ error: 'No such task' });
-  }
-  task.deleted = true;
-
-  res.status(200).json(task);
-  task.save()
-};
-
-// create a new task
-// Inside your task creation route handler
-const createTask = async (req, res) => {
-  const { title, date, description, priority, employees } = req.body;
-  let errors = [];
-
-  // Check for missing fields and add appropriate messages to the errors array
-  if (!title) errors.push("The title field is required.");
-  if (!date) errors.push("Please provide a due date for the task.");
-  if (!description) errors.push("A task description is required.");
-  if (!priority) errors.push("Please select a priority level for the task.");
-
-  // If there are any errors, return a 400 response with the errors array
-  if (errors.length > 0) {
-    return res.status(400).json({ errors: errors });
+  if (!isValidObjectId(id)) {
+    return res.status(400).json({ message: 'Invalid task ID' });
   }
 
   try {
-    // If 'employees' is not an array or is undefined, default to an empty array
-    const assignedEmployees = Array.isArray(employees) ? employees : [];
-
-    const task = new Task({
-      title,
-      date,
-      description,
-      priority,
-      employees: assignedEmployees, // accepts empty array
-      createdBy: req.user.id,
-    });
-
-    await task.save();
-    res.status(201).json(task);
-  } catch (error) {
-    console.error("Error in createTask:", error);
-    res.status(400).json({ errors: ["An unexpected error occurred when creating the task.", error.message] });
-  }
-};
-
-const moment = require('moment-timezone');
-
-// Example function within your controller
-exports.getTasks = async (req, res) => {
-  const tasks = await Task.find(); // Fetch tasks from the database
-  const tasksWithConvertedDates = tasks.map(task => ({
-    ...task._doc,
-    dueDate: moment(task.dueDate).tz('America/Los_Angeles').format(),
-  }));
-  res.json(tasksWithConvertedDates);
-};
-
-// delete a task
-const deleteTask = async (req, res) => {
-  const { id } = req.params;
-
-  if (!mongoose.Types.ObjectId.isValid(id)) {
-    return res.status(400).json({ error: 'No such task' });
-  }
-
-  const task = await Task.findOneAndDelete({ _id: id });
-
-  if (!task) {
-    return res.status(400).json({ error: 'No such task' });
-  }
-
-  res.status(200).json(task);
-};
-
-// update a task
-
-
-// Inside your task update route handler
-const updateTask = async (req, res) => {
-  const { id } = req.params;
-  const { title, date, description, priority, employees } = req.body;
-  
-  let errors = [];
-
-  // Check for missing fields and add appropriate messages to the errors array
-  if (!title) errors.push("The title field is required.");
-  if (!date) errors.push("Please provide a due date for the task.");
-  if (!description) errors.push("A task description is required.");
-  if (!priority) errors.push("Please select a priority level for the task.");
-
-  // If there are any errors, return a 400 response with the errors array
-  if (errors.length > 0) {
-    return res.status(400).json({ errors: errors });
-  }
-
-  try {
-    const updateData = {
-      title,
-      date,
-      description,
-      priority,
-      employees, // can be empty
-      updatedBy: req.user.id, 
-    };
-
-    const now = new Date();
-    updateData.status = new Date(date) > now ? 'In Progress' : 'Past Due';
-
-    const task = await Task.findOneAndUpdate({ _id: id }, updateData, { new: true })
-      .populate('createdBy updatedBy', 'fname lname'); 
-
+    const task = await Task.findById(id).populate('createdBy updatedBy employees');
     if (!task) {
-      return res.status(404).json({ error: 'No such task' });
+      return res.status(404).json({ message: 'Task not found' });
     }
-
     res.status(200).json(task);
   } catch (error) {
-    console.log(error);
-    res.status(400).json({ error: error.message });
+    res.status(500).json({ message: 'Error fetching task', error });
   }
 };
-exports.updateTaskStatuses = async () => {
-  const tasks = await Task.find({ completed: false });
-  tasks.forEach(async (task) => {
-    const now = new Date();
-    const taskDueDate = new Date(task.date);
-    
-    if (taskDueDate < now && task.status !== 'Past Due') {
-      task.status = 'Past Due';
-      await task.save();
-    }
-  });
-};
-//=========================================================================================================
-// Inside taskController.js
-const updateTaskStatus = async (req, res) => {
-  const { id } = req.params;
-  const { status } = req.body;
 
-  if (!mongoose.Types.ObjectId.isValid(id)) {
-    return res.status(404).json({ error: 'No such task' });
+const createTask = async (req, res) => {
+  const { title, date, description, priority, createdBy, employees } = req.body;
+
+  // Ensure the title is provided
+  if (!title) {
+    return res.status(400).json({ message: 'Title is required' });
+  }
+
+  // Create a task object, using defaults where applicable
+  const newTaskData = {
+    title,
+    description: undefined, // Use provided value or undefined
+    date: undefined,                // Use provided value or undefined
+    priority: undefined,        // Use provided value or undefined
+    createdBy: undefined,      // Use provided value or undefined
+    employees: [],              // Defaults to an empty array if not provided
+  };
+
+  // Create the new task instance
+  const newTask = new Task(newTaskData);
+
+  try {
+    // Save the task to the database
+    await newTask.save();
+    res.status(201).json(newTask);
+  } catch (error) {
+    res.status(500).json({ message: 'Error creating task', error });
+  }
+};
+
+
+// Update the task's title
+const updateTaskTitle = async (req, res) => {
+  const { id } = req.params;
+  const { title } = req.body;
+
+  if (!isValidObjectId(id)) {
+    return res.status(400).json({ message: 'Invalid task ID' });
   }
 
   try {
     const task = await Task.findByIdAndUpdate(
-      id, 
-      { status: status }, // Update only the status field
-      { new: true } // Return the updated document
-    ).populate('createdBy updatedBy', 'fname lname');
+      id,
+      { title },
+      { new: true }
+    );
 
     if (!task) {
-      return res.status(404).json({ error: 'No such task' });
+      return res.status(404).json({ message: 'Task not found' });
     }
 
     res.status(200).json(task);
   } catch (error) {
-    console.error(error);
-    res.status(500).json({ error: 'Internal server error' });
+    res.status(500).json({ message: 'Error updating task title', error });
   }
 };
 
+// Update the task's priority
+const updateTaskPriority = async (req, res) => {
+  const { id } = req.params;
+  const { priority } = req.body;
 
-module.exports = {
-  getTasks,
-  getTask,
-  createTask,
-  deleteTask,
-  updateTask,
-  getCompletedTasks,
-  completeTask,
-  markTaskDeleted,
-  uncompleteTask,
-  undeletedTask,
-  updateTaskStatus, // Add this here
+  if (!isValidObjectId(id)) {
+    return res.status(400).json({ message: 'Invalid task ID' });
+  }
+
+  try {
+    const task = await Task.findByIdAndUpdate(
+      id,
+      { priority },
+      { new: true }
+    );
+
+    if (!task) {
+      return res.status(404).json({ message: 'Task not found' });
+    }
+
+    res.status(200).json(task);
+  } catch (error) {
+    res.status(500).json({ message: 'Error updating task priority', error });
+  }
 };
 
+// Update the task's status
+const updateTaskStatus = async (req, res) => {
+  const { id } = req.params;
+  const { status } = req.body;
+
+  if (!isValidObjectId(id)) {
+    return res.status(400).json({ message: 'Invalid task ID' });
+  }
+
+  try {
+    const task = await Task.findByIdAndUpdate(
+      id,
+      { status },
+      { new: true }
+    );
+
+    if (!task) {
+      return res.status(404).json({ message: 'Task not found' });
+    }
+
+    res.status(200).json(task);
+  } catch (error) {
+    res.status(500).json({ message: 'Error updating task status', error });
+  }
+};
+
+// Update the task's due date
+const updateTaskDate = async (req, res) => {
+  const { id } = req.params;
+  const { date } = req.body;
+
+  if (!isValidObjectId(id)) {
+    return res.status(400).json({ message: 'Invalid task ID' });
+  }
+
+  try {
+    const task = await Task.findByIdAndUpdate(
+      id,
+      { date },
+      { new: true }
+    );
+
+    if (!task) {
+      return res.status(404).json({ message: 'Task not found' });
+    }
+
+    res.status(200).json(task);
+  } catch (error) {
+    res.status(500).json({ message: 'Error updating task date', error });
+  }
+};
+
+// Delete a task
+const deleteTask = async (req, res) => {
+  const { id } = req.params;
+
+  if (!isValidObjectId(id)) {
+    return res.status(400).json({ message: 'Invalid task ID' });
+  }
+
+  try {
+    const task = await Task.findByIdAndDelete(id);
+    if (!task) {
+      return res.status(404).json({ message: 'Task not found' });
+    }
+    res.status(200).json({ message: 'Task deleted successfully' });
+  } catch (error) {
+    res.status(500).json({ message: 'Error deleting task', error });
+  }
+};
+
+// Export the controller functions
+module.exports = {
+  getTasks,
+  getTaskById,
+  createTask,
+  updateTaskTitle,
+  updateTaskPriority,
+  updateTaskStatus,
+  updateTaskDate,
+  deleteTask,
+};

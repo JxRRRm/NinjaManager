@@ -3,10 +3,10 @@
   flex-direction: row;
   align-items: center;
   width: auto;
+  height: 2rem;
   background-color: #fff;
   gap: 0.5%;
   border-radius: 2px;
-  padding: 0.25rem 0.5rem;
   box-shadow: 1px 1px  rgba(0,0,0,0.1);
   
 }

@@ -3,33 +3,58 @@ import { useEffect, useState } from "react";
 import { useTasksContext } from "../../hooks/useTasksContext";
 import '../../css/Home.css'; // Import your CSS file
 import TaskItem from "../TaskItem";
-import { useAuthContext } from '../../hooks/useAuthContext';
-import { useNavigate } from 'react-router-dom'; 
-import { useCustomFetch } from '../../hooks/useCustomFetch'; 
-import { useLogout } from '../../hooks/useLogout'; 
+import { useAuthContext } from '../../hooks/useAuthContext'; 
 import moment from 'moment-timezone';
 import FiltersBar from "../FiltersBar";
 import TaskDetailPanel from "../TaskDetailPanel";
+import { useRef } from 'react'; // Import useRef
 
 const Home = () => {
-  const customFetch = useCustomFetch(); 
-  const navigate = useNavigate(); 
-  const { logout } = useLogout(); 
   const { tasks, dispatch } = useTasksContext();
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedPriority, setSelectedPriority] = useState('All');
   const [selectedStatus, setSelectedStatus] = useState('All');
   const [selectedDueDate, setSelectedDueDate] = useState("");
   const { user } = useAuthContext();
-  const isPastDue = (date) => new Date(date) < new Date();
   const [checkedTasks, setCheckedTasks] = useState({}); // Track checked status of individual tasks
   const [isAnyChecked, setIsAnyChecked] = useState(false); // Track if any checkbox is checked
   const [mainCheckboxChecked, setMainCheckboxChecked] = useState(false); // Track main checkbox state
   const [selectedTask, setSelectedTask] = useState(null);  // State for the selected task
+  const [showInput, setShowInput] = useState(false); // State to manage visibility of input
+  const inputRef = useRef(null); // Reference to the input field
 
-  // Function to handle removing a deleted task from the task list
-  const handleTaskDelete = (taskId) => {
-    dispatch({ type: 'DELETE_TASK', payload: taskId });
+  
+  // Function to handle creating a new task
+  const handleCreateTask = async (title) => {
+    // Replace this with your actual task creation logic, e.g., an API call
+    const newTask = {
+      title,
+      date: new Date(),
+      description: '',
+      priority: 'LOW', // Default priority, adjust as needed
+      status: 'TODO',
+      createdBy: user._id, // Replace with the actual user ID from context
+    };
+
+    // Simulate dispatching the new task to the context (or make an API call)
+    dispatch({ type: 'CREATE_TASK', payload: newTask });
+
+    // Reset input and hide input field
+    setShowInput(false);
+    inputRef.current.value = '';
+  };
+
+  // Handle button click to show input field
+  const handleAddButtonClick = () => {
+    setShowInput(true);
+    setTimeout(() => inputRef.current.focus(), 0); // Focus the input field after it's displayed
+  };
+
+  // Handle key press in the input field
+  const handleInputKeyDown = (e) => {
+    if (e.key === 'Enter' && inputRef.current.value.trim() !== '') {
+      handleCreateTask(inputRef.current.value.trim());
+    }
   };
 
   // Function to handle selecting a task
@@ -71,34 +96,6 @@ const Home = () => {
       return updatedChecked;
     });
   };
-  
-  useEffect(() => { 
-    const fetchAndUpdateTasks = async () => {
-      if (!user) return; 
-      try {
-        const json = await customFetch('/api/tasks');
-        // Automatically update task status based on due date
-        const updatedTasks = json.map(task => ({
-          ...task,
-          status: isPastDue(task.date) ? 'Past Due' : task.status
-        }));
-        dispatch({ type: 'SET_TASKS', payload: updatedTasks });
-      } catch (error) {
-        console.error("Error fetching tasks:", error);
-        if (error.message === 'Unauthorized') {
-          logout(); 
-          navigate('/login'); 
-        }
-      }
-    };
-
-    fetchAndUpdateTasks();
-
-    // Interval to continuously check and update task status every minute
-    const intervalId = setInterval(fetchAndUpdateTasks, 60000); // Every minute
-
-    return () => clearInterval(intervalId);
-  }, [user, customFetch, dispatch, selectedStatus, selectedPriority, selectedDueDate, searchTerm]); 
 
 
   const filterTasks = (taskList) => {
@@ -143,6 +140,7 @@ const Home = () => {
           <div className="tasks-container">
             <div className="tasks-container-header">
               <input
+                className="header-checkbox"
                 type="checkbox"
                 checked={mainCheckboxChecked}
                 onChange={handleMainCheckboxChange}
@@ -157,21 +155,33 @@ const Home = () => {
                     isChecked={checkedTasks[task._id] || false}
                     onCheckboxChange={(checked) => handleTaskCheckboxChange(task._id, checked)}
                     showAllCheckboxes={isAnyChecked}
-                    onClose={handleTaskDelete} // Pass this function to TaskItem
                   />
                 </div>
               ))}
             </div>
-            <button className="add-button"><i class="fa-solid fa-plus"></i> Create</button>
-          </div>
-        </div>
-                  {/* Render TaskDetailPanel when a task is selected */}
-                  {selectedTask && (
-            <TaskDetailPanel 
-              task={selectedTask} 
-              onClose={closeTaskDetailPanel}
+            {!showInput ? (
+            <button className="add-button" onClick={handleAddButtonClick}>
+              <i className="fa-solid fa-plus"></i> Create
+            </button>
+            ) : (
+            <input
+              type="text"
+              className="task-input"
+              ref={inputRef}
+              placeholder="What needs to be done?"
+              onKeyDown={handleInputKeyDown} 
+              onBlur={() => setShowInput(false)} // Hide input on losing focus
             />
           )}
+          </div>
+        </div>
+        {/* Render TaskDetailPanel when a task is selected */}
+        {selectedTask && (
+        <TaskDetailPanel 
+          task={selectedTask} 
+          onClose={closeTaskDetailPanel}
+        />
+        )}
       </div>
     </div>
   );

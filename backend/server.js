@@ -3,7 +3,7 @@ require('dotenv').config();
 const express = require('express');
 const mongoose = require('mongoose');
 const requireAuth = require('./middleware/requireAuth'); // Adjust the path as needed
-const taskRoutes = require('./routes/tasks');
+const taskRoutes = require('./routes/taskRoutes');
 const userRoutes = require('./routes/user');
 const cors = require('cors');
 const cron = require('node-cron');
