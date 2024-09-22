@@ -10,7 +10,9 @@ import TaskDetailPanel from "../TaskDetailPanel";
 import { useRef } from 'react'; // Import useRef
 
 const Home = () => {
-  const { tasks, dispatch } = useTasksContext();
+  const [[tasks, setTasks]] = useState([]);
+
+  const { dispatch } = useTasksContext();
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedPriority, setSelectedPriority] = useState('All');
   const [selectedStatus, setSelectedStatus] = useState('All');
@@ -24,26 +26,6 @@ const Home = () => {
   const inputRef = useRef(null); // Reference to the input field
 
   
-  // Function to handle creating a new task
-  const handleCreateTask = async (title) => {
-    // Replace this with your actual task creation logic, e.g., an API call
-    const newTask = {
-      title,
-      date: new Date(),
-      description: '',
-      priority: 'LOW', // Default priority, adjust as needed
-      status: 'TODO',
-      createdBy: user._id, // Replace with the actual user ID from context
-    };
-
-    // Simulate dispatching the new task to the context (or make an API call)
-    dispatch({ type: 'CREATE_TASK', payload: newTask });
-
-    // Reset input and hide input field
-    setShowInput(false);
-    inputRef.current.value = '';
-  };
-
   // Handle button click to show input field
   const handleAddButtonClick = () => {
     setShowInput(true);
@@ -53,7 +35,6 @@ const Home = () => {
   // Handle key press in the input field
   const handleInputKeyDown = (e) => {
     if (e.key === 'Enter' && inputRef.current.value.trim() !== '') {
-      handleCreateTask(inputRef.current.value.trim());
     }
   };
 
@@ -117,6 +98,18 @@ const Home = () => {
     setSearchTerm(""); 
   };
 
+  useEffect(() => {
+    const fetchTasks = async () => {
+      const response = await fetch('http://localhost:4000/api/tasks')
+      const json = await response.json()
+      if (response.ok){
+        setTasks(json)
+      }
+    }
+
+    fetchTasks()
+  }, [])
+
   return (
     <div className="home">
       <div className="top-container"></div>
@@ -148,7 +141,7 @@ const Home = () => {
               <h4>All Tasks</h4>
             </div>
             <div className="tasks-wrapper">
-              {filterTasks(tasks).map(task => (
+              {tasks && tasks.map(task => (
                 <div key={task._id} onClick={() => handleTaskClick(task)}>
                   <TaskItem
                     task={task}
@@ -158,21 +151,22 @@ const Home = () => {
                   />
                 </div>
               ))}
+              {showInput && (
+                <input
+                type="text"
+                className="task-input"
+                ref={inputRef}
+                placeholder="What needs to be done?"
+                onKeyDown={handleInputKeyDown} 
+                onBlur={() => setShowInput(false)} // Hide input on losing focus
+              />
+              )}
             </div>
-            {!showInput ? (
+            {!showInput && (
             <button className="add-button" onClick={handleAddButtonClick}>
               <i className="fa-solid fa-plus"></i> Create
             </button>
-            ) : (
-            <input
-              type="text"
-              className="task-input"
-              ref={inputRef}
-              placeholder="What needs to be done?"
-              onKeyDown={handleInputKeyDown} 
-              onBlur={() => setShowInput(false)} // Hide input on losing focus
-            />
-          )}
+            )}
           </div>
         </div>
         {/* Render TaskDetailPanel when a task is selected */}

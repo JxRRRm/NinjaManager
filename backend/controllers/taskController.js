@@ -8,7 +8,7 @@ const isValidObjectId = (id) => mongoose.Types.ObjectId.isValid(id);
 // Fetch all tasks
 const getTasks = async (req, res) => {
   try {
-    const tasks = await Task.find().populate('createdBy updatedBy employees'); // Populating references
+    const tasks = await Task.find({}).sort({createdAt: 1})
     res.status(200).json(tasks);
   } catch (error) {
     res.status(500).json({ message: 'Error fetching tasks', error });
@@ -16,155 +16,36 @@ const getTasks = async (req, res) => {
 };
 
 // Fetch a single task by ID
-const getTaskById = async (req, res) => {
+const getTask = async (req, res) => {
   const { id } = req.params;
-  if (!isValidObjectId(id)) {
-    return res.status(400).json({ message: 'Invalid task ID' });
+  if (!mongoose.Types.ObjectId.isValid(id)) {
+    return res.status(404).json({ message: 'Task not found' });
   }
 
-  try {
-    const task = await Task.findById(id).populate('createdBy updatedBy employees');
-    if (!task) {
-      return res.status(404).json({ message: 'Task not found' });
-    }
-    res.status(200).json(task);
-  } catch (error) {
-    res.status(500).json({ message: 'Error fetching task', error });
+  const task = await Task.findById(id)
+
+  if (!task) {
+    return res.status(404).json({ message: 'Task not found' });
   }
+  res.status(200).json(task);
+
+
 };
 
 const createTask = async (req, res) => {
-  const { title, date, description, priority, createdBy, employees } = req.body;
+  const { title } = req.body;
 
   // Ensure the title is provided
   if (!title) {
     return res.status(400).json({ message: 'Title is required' });
   }
 
-  // Create a task object, using defaults where applicable
-  const newTaskData = {
-    title,
-    description: undefined, // Use provided value or undefined
-    date: undefined,                // Use provided value or undefined
-    priority: undefined,        // Use provided value or undefined
-    createdBy: undefined,      // Use provided value or undefined
-    employees: [],              // Defaults to an empty array if not provided
-  };
-
-  // Create the new task instance
-  const newTask = new Task(newTaskData);
-
   try {
     // Save the task to the database
-    await newTask.save();
-    res.status(201).json(newTask);
-  } catch (error) {
-    res.status(500).json({ message: 'Error creating task', error });
-  }
-};
-
-
-// Update the task's title
-const updateTaskTitle = async (req, res) => {
-  const { id } = req.params;
-  const { title } = req.body;
-
-  if (!isValidObjectId(id)) {
-    return res.status(400).json({ message: 'Invalid task ID' });
-  }
-
-  try {
-    const task = await Task.findByIdAndUpdate(
-      id,
-      { title },
-      { new: true }
-    );
-
-    if (!task) {
-      return res.status(404).json({ message: 'Task not found' });
-    }
-
+    const task = await Task.create({title});
     res.status(200).json(task);
   } catch (error) {
-    res.status(500).json({ message: 'Error updating task title', error });
-  }
-};
-
-// Update the task's priority
-const updateTaskPriority = async (req, res) => {
-  const { id } = req.params;
-  const { priority } = req.body;
-
-  if (!isValidObjectId(id)) {
-    return res.status(400).json({ message: 'Invalid task ID' });
-  }
-
-  try {
-    const task = await Task.findByIdAndUpdate(
-      id,
-      { priority },
-      { new: true }
-    );
-
-    if (!task) {
-      return res.status(404).json({ message: 'Task not found' });
-    }
-
-    res.status(200).json(task);
-  } catch (error) {
-    res.status(500).json({ message: 'Error updating task priority', error });
-  }
-};
-
-// Update the task's status
-const updateTaskStatus = async (req, res) => {
-  const { id } = req.params;
-  const { status } = req.body;
-
-  if (!isValidObjectId(id)) {
-    return res.status(400).json({ message: 'Invalid task ID' });
-  }
-
-  try {
-    const task = await Task.findByIdAndUpdate(
-      id,
-      { status },
-      { new: true }
-    );
-
-    if (!task) {
-      return res.status(404).json({ message: 'Task not found' });
-    }
-
-    res.status(200).json(task);
-  } catch (error) {
-    res.status(500).json({ message: 'Error updating task status', error });
-  }
-};
-
-// Update the task's due date
-const updateTaskDate = async (req, res) => {
-  const { id } = req.params;
-  const { date } = req.body;
-
-  if (!isValidObjectId(id)) {
-    return res.status(400).json({ message: 'Invalid task ID' });
-  }
-
-  try {
-    const task = await Task.findByIdAndUpdate(
-      id,
-      { date },
-      { new: true }
-    );
-
-    if (!task) {
-      return res.status(404).json({ message: 'Task not found' });
-    }
-
-    res.status(200).json(task);
-  } catch (error) {
-    res.status(500).json({ message: 'Error updating task date', error });
+    res.status(400).json({error: error.message });
   }
 };
 
@@ -172,29 +53,43 @@ const updateTaskDate = async (req, res) => {
 const deleteTask = async (req, res) => {
   const { id } = req.params;
 
-  if (!isValidObjectId(id)) {
-    return res.status(400).json({ message: 'Invalid task ID' });
+  if (!mongoose.Types.ObjectId.isValid(id)) {
+    return res.status(404).json({ message: 'Task not found' });
   }
 
-  try {
-    const task = await Task.findByIdAndDelete(id);
-    if (!task) {
-      return res.status(404).json({ message: 'Task not found' });
-    }
-    res.status(200).json({ message: 'Task deleted successfully' });
-  } catch (error) {
-    res.status(500).json({ message: 'Error deleting task', error });
+  const task = await Task.findByIdAndDelete({_id: id});
+  if (!task) {
+    return res.status(400).json({ message: 'Task not found' });
   }
+
+  res.status(200).json({ message: 'Task deleted successfully' });
+
 };
+
+// Update a task
+const updateTask = async (req, res) => {
+  const { id } = req.params;
+
+  if (!mongoose.Types.ObjectId.isValid(id)) {
+    return res.status(404).json({ message: 'Task not found' });
+  }
+
+  const task = await Task.findOneAndUpdate({_id: id}, {
+    ...req.body
+  })
+
+  if (!task) {
+    return res.status(400).json({ message: 'Task not found' });
+  }
+
+  res.status(200).json(task);
+}
 
 // Export the controller functions
 module.exports = {
   getTasks,
-  getTaskById,
+  getTask,
   createTask,
-  updateTaskTitle,
-  updateTaskPriority,
-  updateTaskStatus,
-  updateTaskDate,
   deleteTask,
+  updateTask
 };
