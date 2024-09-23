@@ -1,31 +1,30 @@
-// routes/task.js
-
 const express = require('express');
 const router = express.Router();
-const taskController = require('../controllers/taskController');
+const {
+  getTasks,
+  getTask,
+  createTask,
+  deleteTask,
+  updateTask
+} = require('../controllers/taskController');
+const requireAuth = require('../middleware/requireAuth')
+
+// require authenication for routes
+router.use(requireAuth)
 
 // Route to fetch all tasks
-router.get('/', taskController.getTasks);
+router.get('/', getTasks);
 
 // Route to fetch a single task by ID
-router.get('/:id', taskController.getTaskById);
+router.get('/:id', getTask);
 
 // Route to create a new task
-router.post('/', taskController.createTask);
-
-// Route to update a task's title
-router.patch('/:id/title', taskController.updateTaskTitle);
-
-// Route to update a task's priority
-router.patch('/:id/priority', taskController.updateTaskPriority);
-
-// Route to update a task's status
-router.patch('/:id/status', taskController.updateTaskStatus);
-
-// Route to update a task's date
-router.patch('/:id/date', taskController.updateTaskDate);
+router.post('/', createTask);
 
 // Route to delete a task
-router.delete('/:id', taskController.deleteTask);
+router.delete('/:id', deleteTask);
+
+// Route to update a task
+router.patch('/:id', updateTask);
 
 module.exports = router;

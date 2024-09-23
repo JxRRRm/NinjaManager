@@ -1,6 +1,19 @@
 const express = require('express');
 // Removed duplicate imports and included 'verifyEmail' from the same 'userController' import
-const { loginUser, signupUser, verifyEmail, updateUserPassword, sendOTP, deleteOTP, forgotPassword, resetPassword, getEmployees, deleteUser, assignAdmin, unassignAdmin} = require('../controllers/userController')
+const { 
+  loginUser, 
+  signupUser, 
+  verifyEmail, 
+  updateUserPassword, 
+  sendOTP, 
+  deleteOTP, 
+  forgotPassword, 
+  resetPassword, 
+  getEmployees, 
+  deleteUser, 
+  assignAdmin, 
+  unassignAdmin
+} = require('../controllers/userController')
 const requireAuth = require('../middleware/requireAuth'); // Assuming this middleware exists to check for authenticated users
 const { getUserById } = require('../controllers/userController');
 const { getUserDetails } = require('../controllers/userController');

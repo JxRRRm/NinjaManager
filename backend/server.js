@@ -1,5 +1,4 @@
 require('dotenv').config();
-
 const express = require('express');
 const mongoose = require('mongoose');
 const requireAuth = require('./middleware/requireAuth'); // Adjust the path as needed
@@ -16,7 +15,7 @@ const app = express();
 // Schedule a task to run every hour to update task statuses
 cron.schedule('0 * * * *', () => {
   console.log('Updating task statuses');
-  taskController.updateTaskStatuses();
+  //taskController.updateTaskStatuses();
 });
 
 // Add CORS configuration

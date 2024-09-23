@@ -1,32 +1,43 @@
 import React, { useState, useEffect } from 'react';
 import './../css/TaskItem.css';
 import PropTypes from 'prop-types';
+import { useAuthContext } from '../hooks/useAuthContext'; 
 
-const TaskItem = ({ task, onClose, isChecked, onCheckboxChange, showAllCheckboxes  }) => {
+const TaskItem = ({ task, onClose, isChecked, onCheckboxChange, showAllCheckboxes, onDelete  }) => {
+  const { user } = useAuthContext();
   const [selectedCategory, setCategory] = useState('');
   const [assignedEmployees, setAssignedEmployees] = useState([]);
 
-  // Handle task deletion and send to backend
+  // Handle task deletion and notify the parent component
   const handleDelete = async (e) => {
     e.stopPropagation(); // Prevent click from bubbling to the parent
 
     try {
       // Send the DELETE request to the backend
-      const response = await fetch(`http://localhost:4000/api/tasks/delete/${task._id}`, {
+      const response = await fetch(`http://localhost:4000/api/tasks/${task._id}`, {
         method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${user.token}`
+        },
       });
 
+      // Log the response status and response text for debugging
+      console.log('Response Status:', response.status);
+
+      // Check if the response is not OK and throw an error with the message
       if (!response.ok) {
         throw new Error('Failed to delete task');
       }
 
       // Notify the parent component that the task has been deleted
-      onClose(task._id); // Pass the task ID to the parent to remove it from the UI
+      onDelete(task._id); // Pass the deleted task's id to the parent
       console.log('Task deleted successfully');
     } catch (error) {
       console.error('Error deleting task:', error);
     }
   };
+
 // Handle status change and send to backend
 const handleStatusChange = async (e) => {
   e.stopPropagation(); // Prevent click from bubbling to the parent
@@ -37,7 +48,7 @@ const handleStatusChange = async (e) => {
 
   try {
     // Send the PATCH request to update the task status in the backend
-    const response = await fetch(`http://localhost:4000/api/tasks/${task._id}/status`, {
+    const response = await fetch(`http://localhost:4000/api/tasks/${task._id}`, {
       method: 'PATCH',
       headers: {
         'Content-Type': 'application/json',
@@ -125,7 +136,7 @@ TaskItem.propTypes = {
   isChecked: PropTypes.bool.isRequired,
   onCheckboxChange: PropTypes.func.isRequired,
   showAllCheckboxes: PropTypes.bool.isRequired,
-  onClose: PropTypes.func.isRequired, // Update onClose to pass task ID for deletion
+  onDelete: PropTypes.func.isRequired, // Add onDelete prop type
 };
 
 export default TaskItem;

@@ -10,7 +10,7 @@ import TaskDetailPanel from "../TaskDetailPanel";
 import { useRef } from 'react'; // Import useRef
 
 const Home = () => {
-  const [[tasks, setTasks]] = useState([]);
+  const [tasks, setTasks] = useState([]);
 
   const { dispatch } = useTasksContext();
   const [searchTerm, setSearchTerm] = useState("");
@@ -28,13 +28,38 @@ const Home = () => {
   
   // Handle button click to show input field
   const handleAddButtonClick = () => {
-    setShowInput(true);
+    setShowInput(true);               
     setTimeout(() => inputRef.current.focus(), 0); // Focus the input field after it's displayed
   };
 
   // Handle key press in the input field
-  const handleInputKeyDown = (e) => {
+  const handleInputKeyDown = async (e) => {
     if (e.key === 'Enter' && inputRef.current.value.trim() !== '') {
+      // Create task when Enter key is pressed
+      const newTaskTitle = inputRef.current.value.trim();
+
+      try {
+        const response = await fetch('/api/tasks/', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            // Add authorization header if necessary
+            'Authorization': `Bearer ${user.token}`
+          },
+          body: JSON.stringify({ title: newTaskTitle })
+        });
+
+        if (response.ok) {
+          const createdTask = await response.json();
+          setTasks(prevTasks => [createdTask, ...prevTasks]); // Add the new task to the tasks list
+          inputRef.current.value = ''; // Clear the input field
+          setShowInput(false); // Hide input field
+        } else {
+          console.error('Failed to create task');
+        }
+      } catch (error) {
+        console.error('Error creating task:', error);
+      }
     }
   };
 
@@ -78,6 +103,11 @@ const Home = () => {
     });
   };
 
+  // Define the handler for deleting a task
+  const handleDeleteTask = (taskId) => {
+    setTasks((prevTasks) => prevTasks.filter((task) => task._id !== taskId));
+  };
+
 
   const filterTasks = (taskList) => {
     return (taskList || []).filter(task => {
@@ -100,15 +130,33 @@ const Home = () => {
 
   useEffect(() => {
     const fetchTasks = async () => {
-      const response = await fetch('http://localhost:4000/api/tasks')
-      const json = await response.json()
-      if (response.ok){
-        setTasks(json)
+      try {
+        const response = await fetch('http://localhost:4000/api/tasks', {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+            // Include the Authorization header if your backend requires authentication
+            'Authorization': `Bearer ${user?.token}`, // Make sure user is defined
+          },
+        });
+  
+        if (!response.ok) {
+          throw new Error('Failed to fetch tasks'); // Throw an error if the response is not OK
+        }
+  
+        const json = await response.json();
+        setTasks(json);
+        dispatch({ type: 'SET_TASKS', payload: json }); // Dispatch the fetched tasks to the context if needed
+      } catch (error) {
+        console.error('Error fetching tasks:', error);
       }
+    };
+  
+    if (user) { // Ensure the user is available before fetching
+      fetchTasks();
     }
-
-    fetchTasks()
-  }, [])
+  }, [user, dispatch]); // Add user and dispatch as dependencies
+  
 
   return (
     <div className="home">
@@ -148,6 +196,7 @@ const Home = () => {
                     isChecked={checkedTasks[task._id] || false}
                     onCheckboxChange={(checked) => handleTaskCheckboxChange(task._id, checked)}
                     showAllCheckboxes={isAnyChecked}
+                    onDelete={handleDeleteTask} // Pass the handler to TaskItem
                   />
                 </div>
               ))}

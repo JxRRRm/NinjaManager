@@ -2,9 +2,6 @@
 const Task = require('../models/taskModel');
 const mongoose = require('mongoose');
 
-// Utility function to check if ObjectId is valid
-const isValidObjectId = (id) => mongoose.Types.ObjectId.isValid(id);
-
 // Fetch all tasks
 const getTasks = async (req, res) => {
   try {
@@ -42,7 +39,10 @@ const createTask = async (req, res) => {
 
   try {
     // Save the task to the database
-    const task = await Task.create({title});
+    const task = await Task.create({
+      title,
+      createdBy: req.user.id,
+    });
     res.status(200).json(task);
   } catch (error) {
     res.status(400).json({error: error.message });
@@ -57,7 +57,7 @@ const deleteTask = async (req, res) => {
     return res.status(404).json({ message: 'Task not found' });
   }
 
-  const task = await Task.findByIdAndDelete({_id: id});
+  const task = await Task.findByIdAndDelete({id});
   if (!task) {
     return res.status(400).json({ message: 'Task not found' });
   }

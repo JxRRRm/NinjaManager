@@ -33,7 +33,6 @@ const taskSchema = new Schema({
     type: String,
     enum: ['TODO', 'IN PROGRESS', 'DONE'],
     default: 'TODO',
-    required: false
   },  
   createdBy: {
     type: mongoose.Schema.Types.ObjectId,
